@@ -70,7 +70,7 @@ def get_qubits():
 
 @app.route("/get/backend")
 def get_backend():
-    return jsonify({'message' : 'Success', 'num_qubits': qc.backend}), 200
+    return jsonify({'message' : 'Success', 'backend': qc.backend}), 200
 
 
 # ----- Update the Quantum Computer -----
