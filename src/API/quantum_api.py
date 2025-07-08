@@ -40,7 +40,7 @@ def run_script():
     try:
         result = qc(qasm, shots)
     except:
-        return jsonify(validate_qasm(qasm)), 400
+        return jsonify(validate_qasm(qasm, qc.num_qubits)), 400
     
     result['statevector'] = list(map(lambda z: (z.real, z.imag), result['statevector']))
     
@@ -57,7 +57,7 @@ def validate_script():
     if not qasm:
         return jsonify({'error': 'No QASM script: Missing "script" field.'}), 400
     
-    result = validate_qasm(qasm)
+    result = validate_qasm(qasm, qc.num_qubits)
     
     return jsonify(result), 200
 
