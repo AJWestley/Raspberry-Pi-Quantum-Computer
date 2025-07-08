@@ -24,14 +24,14 @@ def validate_qasm(qasm_script: str, num_qubits: int) -> dict:
     try:
         qc = QuantumCircuit.from_qasm_str(qasm_script)
         
-        if len(qc.qregs) > num_qubits:
+        if qc.num_qubits > num_qubits:
             result['line'] = TOO_MANY_QUBITS
             result['col'] = TOO_MANY_QUBITS
             result['error'] = f'The device cannot support more than {num_qubits} qubits.'
-        elif len(qc.qregs) != len(qc.cregs):
+        elif qc.num_qubits != qc.num_clbits:
             result['line'] = REGISTER_MISMATCH
             result['col'] = REGISTER_MISMATCH
-            result['error'] = f'The number of qubits ({len(qc.qregs)}) should match the number of classical registers ({len(qc.cregs)}).'
+            result['error'] = f'The number of qubits ({qc.num_qubits}) should match the number of classical registers ({qc.num_clbits}).'
         
     except QiskitError as e:
         # Try to extract line and column info from the error message
