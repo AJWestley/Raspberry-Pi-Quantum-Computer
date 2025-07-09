@@ -5,6 +5,9 @@ import re
 VALID = -1
 TOO_MANY_QUBITS = -2
 REGISTER_MISMATCH = -3
+INTERMEDIATE_MEASUREMENT = -4
+NO_MEASUREMENT = -5
+UNKNOWN_ERROR = -6
 
 def validate_qasm(qasm_script: str, num_qubits: int) -> dict:
     """
@@ -32,6 +35,18 @@ def validate_qasm(qasm_script: str, num_qubits: int) -> dict:
             result['line'] = REGISTER_MISMATCH
             result['col'] = REGISTER_MISMATCH
             result['error'] = f'The number of qubits ({qc.num_qubits}) should match the number of classical registers ({qc.num_clbits}).'
+        elif has_intermediate_measurement(qasm_script):
+            result['line'] = INTERMEDIATE_MEASUREMENT
+            result['col'] = INTERMEDIATE_MEASUREMENT
+            result['error'] = f'Cannot measure in the middle of a circuit.'
+        elif has_measurement(qasm_script):
+            result['line'] = NO_MEASUREMENT
+            result['col'] = NO_MEASUREMENT
+            result['error'] = f'Circuit must contain at least one measurement.'
+        else:
+            result['line'] = UNKNOWN_ERROR
+            result['col'] = UNKNOWN_ERROR
+            result['error'] = f'Unknown error.'
         
     except QiskitError as e:
         # Try to extract line and column info from the error message
@@ -44,3 +59,19 @@ def validate_qasm(qasm_script: str, num_qubits: int) -> dict:
             result['col'] = col
             
     return result
+
+def has_intermediate_measurement(qasm_script: str):
+    lines = qasm_script.split('\n')
+    measure_found = False
+    for line in lines:
+        if len(line.strip()) == 0:
+            continue
+        re_match = re.match(r'measure .* -> .*', line)
+        if measure_found and not re_match:
+            return True
+        if not measure_found and re_match:
+            measure_found = True
+    return False
+
+def has_measurement(qasm_script: str):
+    return re.match(r'measure .* -> .*', qasm_script) is not None
