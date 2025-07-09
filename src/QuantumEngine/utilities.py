@@ -56,23 +56,23 @@ def validate_qasm(qasm_script: str, num_qubits: int) -> dict:
             
     return result
 
-def has_intermediate_measurement(qasm_code):
+def has_intermediate_measure(qasm_code):
+    lines = qasm_code.strip().splitlines()
+    found_measure_block = False
 
-    matches = list(re.finditer(r'^\s*measure\s+.*?;\s*$', qasm_code, re.MULTILINE))
-
-    if not matches:
-        return False
-
-    last_measure_end = matches[-1].end()
-
-    tail = qasm_code[last_measure_end:]
-
-    for line in tail.strip().splitlines():
+    for line in lines:
         stripped = line.strip()
-        if stripped and not stripped.startswith('//') and not stripped.startswith('#'):
+        if not stripped or stripped.startswith('//') or stripped.startswith('#'):
+            continue
+
+        is_measure = re.match(r'^measure\s+[^\n]+;\s*$', stripped)
+
+        if is_measure:
+            found_measure_block = True
+        elif found_measure_block:
             return True
 
     return False
 
 def has_measurement(qasm_script: str):
-    return len(list(re.finditer(r'^\s*measure\s+.*?;\s*$', qasm_script, re.MULTILINE))) > 0
+    return bool(re.search(r'^\s*measure\s+.+?;\s*$', qasm_script, re.MULTILINE))
