@@ -39,14 +39,10 @@ def validate_qasm(qasm_script: str, num_qubits: int) -> dict:
             result['line'] = INTERMEDIATE_MEASUREMENT
             result['col'] = INTERMEDIATE_MEASUREMENT
             result['error'] = f'Cannot measure in the middle of a circuit.'
-        elif has_measurement(qasm_script):
+        elif not has_measurement(qasm_script):
             result['line'] = NO_MEASUREMENT
             result['col'] = NO_MEASUREMENT
             result['error'] = f'Circuit must contain at least one measurement.'
-        else:
-            result['line'] = UNKNOWN_ERROR
-            result['col'] = UNKNOWN_ERROR
-            result['error'] = f'Unknown error.'
         
     except QiskitError as e:
         # Try to extract line and column info from the error message
@@ -60,18 +56,23 @@ def validate_qasm(qasm_script: str, num_qubits: int) -> dict:
             
     return result
 
-def has_intermediate_measurement(qasm_script: str):
-    lines = qasm_script.split('\n')
-    measure_found = False
-    for line in lines:
-        if len(line.strip()) == 0:
-            continue
-        re_match = re.match(r'measure .* -> .*', line)
-        if measure_found and not re_match:
+def has_intermediate_measurement(qasm_code):
+
+    matches = list(re.finditer(r'^\s*measure\s+.*?;\s*$', qasm_code, re.MULTILINE))
+
+    if not matches:
+        return False
+
+    last_measure_end = matches[-1].end()
+
+    tail = qasm_code[last_measure_end:]
+
+    for line in tail.strip().splitlines():
+        stripped = line.strip()
+        if stripped and not stripped.startswith('//') and not stripped.startswith('#'):
             return True
-        if not measure_found and re_match:
-            measure_found = True
+
     return False
 
 def has_measurement(qasm_script: str):
-    return re.match(r'measure .* -> .*', qasm_script) is not None
+    return len(list(re.finditer(r'^\s*measure\s+.*?;\s*$', qasm_script, re.MULTILINE))) > 0
