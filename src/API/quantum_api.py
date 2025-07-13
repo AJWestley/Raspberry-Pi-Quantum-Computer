@@ -1,10 +1,11 @@
 from flask import Flask, request, jsonify
-
+from flask_cors import CORS
 import QuantumEngine.quantum_simulator as qsim
 from QuantumEngine.utilities import validate_qasm
 import API.info as info
 
 app = Flask(__name__)
+CORS(app)
 
 qc = qsim.QuantumComputer(10)
 
