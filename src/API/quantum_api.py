@@ -42,7 +42,8 @@ def run_script():
     except:
         return jsonify(validate_qasm(qasm, qc.num_qubits)), 400
     
-    result['statevector'] = list(map(lambda z: (z.real, z.imag), result['statevector']))
+    if result['statevector']:
+        result['statevector'] = list(map(lambda z: (z.real, z.imag), result['statevector']))
     
     return jsonify(result), 200
 
