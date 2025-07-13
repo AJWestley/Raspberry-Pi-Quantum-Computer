@@ -4,10 +4,8 @@ import re
 
 VALID = -1
 TOO_MANY_QUBITS = -2
-REGISTER_MISMATCH = -3
-INTERMEDIATE_MEASUREMENT = -4
-NO_MEASUREMENT = -5
-UNKNOWN_ERROR = -6
+NO_MEASUREMENT = -3
+UNKNOWN_ERROR = -4
 
 def validate_qasm(qasm_script: str, num_qubits: int) -> dict:
     """
@@ -31,14 +29,6 @@ def validate_qasm(qasm_script: str, num_qubits: int) -> dict:
             result['line'] = TOO_MANY_QUBITS
             result['col'] = TOO_MANY_QUBITS
             result['error'] = f'The device cannot support more than {num_qubits} qubits.'
-        elif qc.num_qubits != qc.num_clbits:
-            result['line'] = REGISTER_MISMATCH
-            result['col'] = REGISTER_MISMATCH
-            result['error'] = f'The number of qubits ({qc.num_qubits}) should match the number of classical registers ({qc.num_clbits}).'
-        elif has_intermediate_measurement(qasm_script):
-            result['line'] = INTERMEDIATE_MEASUREMENT
-            result['col'] = INTERMEDIATE_MEASUREMENT
-            result['error'] = f'Cannot measure in the middle of a circuit.'
         elif not has_measurement(qasm_script):
             result['line'] = NO_MEASUREMENT
             result['col'] = NO_MEASUREMENT
@@ -55,24 +45,6 @@ def validate_qasm(qasm_script: str, num_qubits: int) -> dict:
             result['col'] = col
             
     return result
-
-def has_intermediate_measure(qasm_code):
-    lines = qasm_code.strip().splitlines()
-    found_measure_block = False
-
-    for line in lines:
-        stripped = line.strip()
-        if not stripped or stripped.startswith('//') or stripped.startswith('#'):
-            continue
-
-        is_measure = re.match(r'^measure\s+[^\n]+;\s*$', stripped)
-
-        if is_measure:
-            found_measure_block = True
-        elif found_measure_block:
-            return True
-
-    return False
 
 def has_measurement(qasm_script: str):
     return bool(re.search(r'^\s*measure\s+.+?;\s*$', qasm_script, re.MULTILINE))

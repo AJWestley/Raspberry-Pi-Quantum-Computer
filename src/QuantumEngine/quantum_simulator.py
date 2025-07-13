@@ -83,15 +83,22 @@ class QuantumComputer:
         self.__validate_circuit(qc)
 
         qc_clean = qc.remove_final_measurements(inplace=False)
-        state = Statevector.from_instruction(qc_clean)
-        probabilities = state.probabilities_dict()
+        
+        state = None
+        probabilities = None
+        
+        try:
+            state = Statevector.from_instruction(qc_clean)
+            probabilities = state.probabilities_dict()
+        except Exception as e:
+            pass
 
         qc_compiled = transpile(qc, backend=sim)
         result = sim.run(qc_compiled, shots=shots).result()
 
         return {
-            "statevector": list(state.data),
-            "probabilities": probabilities,
+            "statevector": list(state.data) if state else None,
+            "probabilities": probabilities if probabilities else None,
             "counts": result.get_counts()
         }
     
