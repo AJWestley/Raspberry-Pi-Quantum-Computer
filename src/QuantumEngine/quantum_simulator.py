@@ -39,20 +39,21 @@ class QuantumComputer:
         self.backend = backend
         self.num_qubits = num_qubits
     
-    def run(self, qasm_script: str, shots: int = 1024) -> dict:
+    def run(self, qasm_script: str, shots: int = 1024, backend: BACKEND = 'fault-tolerant') -> dict:
         """
         Execute a QASM script on the selected backend.
 
         Args:
             qasm_script (str): Quantum circuit in QASM format.
             shots (int, optional): Number of circuit executions for measurement statistics. Defaults to 1024.
+            backend (str, optional): Backend type to use. Defaults to the instance's backend.
 
         Returns:
             dict: Dictionary containing statevector (list of complex amplitudes),
                                         probabilities (dict of basis states to probabilities),
                                         and counts (measurement results).
         """
-        return self(qasm_script, shots)
+        return self(qasm_script, shots, backend)
     
     def __repr__(self) -> str:
         """Return string representation of the QuantumComputer instance."""
@@ -62,19 +63,23 @@ class QuantumComputer:
         """Return the number of qubits supported."""
         return self.num_qubits
     
-    def __call__(self, qasm_script: str, shots: int = 1024) -> dict:
+    def __call__(self, qasm_script: str, shots: int = 1024, backend: BACKEND = 'fault-tolerant') -> dict:
         """
         Execute a QASM script on the selected backend.
 
         Args:
             qasm_script (str): Quantum circuit in QASM format.
             shots (int, optional): Number of circuit executions for measurement statistics. Defaults to 1024.
+            backend (str, optional): Backend type to use. Defaults to the instance's backend.
 
         Returns:
             dict: Dictionary containing statevector (list of complex amplitudes),
                                         probabilities (dict of basis states to probabilities),
                                         and counts (measurement results).
         """
+        if backend:
+            self.backend = backend
+        
         if self.backend not in self.__simulators:
             self.__init_backend(self.backend)
         sim = self.__simulators[self.backend]
@@ -91,7 +96,7 @@ class QuantumComputer:
             state = Statevector.from_instruction(qc_clean)
             probabilities = state.probabilities_dict()
         except Exception as e:
-            pass
+            print(f"Error processing statevector: {e}")
 
         qc_compiled = transpile(qc, backend=sim)
         result = sim.run(qc_compiled, shots=shots).result()

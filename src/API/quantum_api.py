@@ -38,8 +38,12 @@ def run_script():
     if not shots:
         shots = 1024
     
+    backend = data.get('backend')
+    if not backend:
+        backend = qc.backend
+    
     try:
-        result = qc(qasm, shots)
+        result = qc(qasm, shots, backend)
     except:
         return jsonify(validate_qasm(qasm, qc.num_qubits)), 400
     
